@@ -75,6 +75,7 @@ Namespace Models
                             chunk = New Byte(length - 1) {}
                             Me.Socket.GetStream.Read(chunk, 0, chunk.Length)
                             buffer.AddRange(chunk)
+                            total -= length
                         Loop While Me.Socket.Available > 0
                         RaiseEvent OnDataReceived(buffer.ToArray)
                     End If
