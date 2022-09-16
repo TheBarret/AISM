@@ -78,7 +78,8 @@ Namespace Models
                     g.InterpolationMode = Drawing2D.InterpolationMode.High
                     g.SmoothingMode = Drawing2D.SmoothingMode.AntiAlias
                     g.Clear(Color.Transparent)
-                    Broadcast.Draw(g, New Rectangle(0, 0, 32, 32), color, 20)
+                    Broadcast.Draw(g, New Rectangle(0, 0, 32, 32), color, 5)
+                    Broadcast.Draw(g, New Rectangle(0, 0, 32, 32), color, 10)
                 End Using
                 Return bm
             End Get
