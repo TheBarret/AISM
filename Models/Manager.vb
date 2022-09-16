@@ -68,7 +68,7 @@ Namespace Models
                     Case AisMessageType.PositionReportClassA
                         If (Me.Tracking.ContainsKey(message.Mmsi)) Then
                             Dim m As PositionReportClassAMessage = CType(message, PositionReportClassAMessage)
-                            If (Broadcast.Distance(Me.Tracking(message.Mmsi).Coordinates, m.Coordinates) > 1) Then
+                            If (Me.Tracking(message.Mmsi).Coordinates.Distance(m.Coordinates) > 1) Then
                                 Me.Tracking(message.Mmsi).History.Push(Me.Tracking(message.Mmsi).Coordinates)
                             End If
                             Me.Tracking(message.Mmsi).Lat = m.Latitude
@@ -84,7 +84,7 @@ Namespace Models
                     Case AisMessageType.BaseStationReport
                         If (Me.Tracking.ContainsKey(message.Mmsi)) Then
                             Dim m As BaseStationReportMessage = CType(message, BaseStationReportMessage)
-                            If (Broadcast.Distance(Me.Tracking(message.Mmsi).Coordinates, m.Coordinates) > 1) Then
+                            If (Me.Tracking(message.Mmsi).Coordinates.Distance(m.Coordinates) > 1) Then
                                 Me.Tracking(message.Mmsi).History.Push(Me.Tracking(message.Mmsi).Coordinates)
                             End If
                             Me.Tracking(message.Mmsi).Lat = m.Latitude
