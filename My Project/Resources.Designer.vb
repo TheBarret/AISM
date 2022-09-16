@@ -22,7 +22,7 @@ Namespace My.Resources
     '''<summary>
     '''  A strongly-typed resource class, for looking up localized strings, etc.
     '''</summary>
-    <Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0"),  _
+    <Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0"),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
      Global.System.Runtime.CompilerServices.CompilerGeneratedAttribute(),  _
      Global.Microsoft.VisualBasic.HideModuleNameAttribute()>  _
@@ -87,9 +87,15 @@ Namespace My.Resources
         '''228 France
         '''230 Finland
         '''231 Faroe Islands
-        '''232 United Kingdom of Great Britain and Northern Ireland
-        '''233 United Kingdom of Great Britain and Northern Ireland
-        '''234 United Kingdom of Great Britain and Northern Irel [rest of string was truncated]&quot;;.
+        '''232 UK | Northern Ireland
+        '''233 UK | Northern Ireland
+        '''234 UK | Northern Ireland
+        '''235 UK | Northern Ireland
+        '''236 Gibraltar
+        '''237 Greece
+        '''238 Croatia
+        '''239 Greece
+        '''240 Greec [rest of string was truncated]&quot;;.
         '''</summary>
         Friend ReadOnly Property codes() As String
             Get

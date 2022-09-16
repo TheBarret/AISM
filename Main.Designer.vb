@@ -33,9 +33,9 @@ Partial Class Main
         Me.Interval = New System.Windows.Forms.Timer(Me.components)
         Me.MapStatus = New System.Windows.Forms.TextBox()
         Me.cmdTimer = New System.Windows.Forms.Button()
-        Me.Lview = New System.Windows.Forms.ListView()
         Me.tbHost = New System.Windows.Forms.TextBox()
         Me.tbPort = New System.Windows.Forms.TextBox()
+        Me.TView = New System.Windows.Forms.TreeView()
         CType(Me.mapZoom, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
@@ -123,7 +123,7 @@ Partial Class Main
         '
         'Interval
         '
-        Me.Interval.Interval = 5000
+        Me.Interval.Interval = 3000
         '
         'MapStatus
         '
@@ -143,15 +143,6 @@ Partial Class Main
         Me.cmdTimer.Text = "Update"
         Me.cmdTimer.UseVisualStyleBackColor = True
         '
-        'Lview
-        '
-        Me.Lview.HideSelection = False
-        Me.Lview.Location = New System.Drawing.Point(718, 223)
-        Me.Lview.Name = "Lview"
-        Me.Lview.Size = New System.Drawing.Size(279, 376)
-        Me.Lview.TabIndex = 9
-        Me.Lview.UseCompatibleStateImageBehavior = False
-        '
         'tbHost
         '
         Me.tbHost.Enabled = False
@@ -170,14 +161,21 @@ Partial Class Main
         Me.tbPort.TabIndex = 11
         Me.tbPort.Text = "10100"
         '
+        'TView
+        '
+        Me.TView.Location = New System.Drawing.Point(718, 223)
+        Me.TView.Name = "TView"
+        Me.TView.Size = New System.Drawing.Size(279, 376)
+        Me.TView.TabIndex = 12
+        '
         'Main
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(7.0!, 15.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(1009, 611)
+        Me.Controls.Add(Me.TView)
         Me.Controls.Add(Me.tbPort)
         Me.Controls.Add(Me.tbHost)
-        Me.Controls.Add(Me.Lview)
         Me.Controls.Add(Me.cmdTimer)
         Me.Controls.Add(Me.MapStatus)
         Me.Controls.Add(Me.Label2)
@@ -208,7 +206,7 @@ Partial Class Main
     Friend WithEvents Interval As Timer
     Friend WithEvents MapStatus As TextBox
     Friend WithEvents cmdTimer As Button
-    Friend WithEvents Lview As ListView
     Friend WithEvents tbHost As TextBox
     Friend WithEvents tbPort As TextBox
+    Friend WithEvents TView As TreeView
 End Class

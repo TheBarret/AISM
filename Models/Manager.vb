@@ -1,31 +1,35 @@
-﻿Imports AisParser
-Imports System.Text
-Imports GMap.NET.WindowsForms
+﻿Imports System.Text
+Imports AisParser
 Imports AisParser.Messages
+Imports GMap.NET
+Imports GMap.NET.WindowsForms
 
 Namespace Models
     Public Class Manager
         Implements IDisposable
-
         Public Property Client As Client
+        Public Property Base As PointLatLng
         Public Property Overlay As GMapOverlay
         Public Property Logger As Action(Of String)
-        Public Property Countries As Dictionary(Of String, String)
-        Public Property Tracking As Dictionary(Of UInt32, Message)
+        Public Property Countries As Dictionary(Of Int32, String)
+        Public Property Tracking As Dictionary(Of UInt32, Broadcast)
         Private Property Disposed As Boolean
 
-        Sub New(host As String, port As Integer)
+        Public Event Update(type As MessageType, msg As Broadcast, seen As Boolean)
+
+        Sub New(host As String, port As Integer, base As PointLatLng)
+            Me.Base = base
             Me.Initialize()
             Me.Prepare(host, port)
         End Sub
 
         Private Sub Initialize()
             Me.Overlay = New GMapOverlay("AIS")
-            Me.Tracking = New Dictionary(Of UInteger, Message)
-            Me.Countries = New Dictionary(Of String, String)
+            Me.Tracking = New Dictionary(Of UInteger, Broadcast)
+            Me.Countries = New Dictionary(Of Int32, String)
             Dim data As String = My.Resources.codes
             For Each line As String In data.Split(ControlChars.NewLine)
-                Dim index As String = line.Trim.Substring(0, 3)
+                Dim index As Integer = line.Str2int(0, 3)
                 Dim origin As String = line.Substring(3).Trim
                 Me.Countries.Add(index, origin)
             Next
@@ -37,24 +41,24 @@ Namespace Models
         End Sub
 
         Private Sub OnDataReceived(buffer() As Byte)
-            Me.Process(buffer)
-            Me.Client.Close()
+            SyncLock Me.Tracking
+                Me.Process(buffer)
+                Me.Client.Close()
+            End SyncLock
         End Sub
 
         Private Sub Process(buffer() As Byte)
-            Dim value As String = String.Empty, message As AisMessage
+            Dim value As String = String.Empty
             Static AIS As New AisParser.Parser
             value = UTF8Encoding.ASCII.GetString(buffer)
             If (value.Contains(ControlChars.NewLine)) Then
                 For Each line As String In value.Split(ControlChars.NewLine)
                     If (line.Length > 0) Then
-                        message = AIS.Parse(line)
-                        Me.Assign(message)
+                        Me.Assign(AIS.Parse(line))
                     End If
                 Next
             Else
-                message = AIS.Parse(value)
-                Me.Assign(message)
+                Me.Assign(AIS.Parse(value))
             End If
         End Sub
 
@@ -63,26 +67,46 @@ Namespace Models
                 Select Case message.MessageType
                     Case AisMessageType.PositionReportClassA
                         If (Me.Tracking.ContainsKey(message.Mmsi)) Then
-                            Me.Tracking(message.Mmsi).Lat = CType(message, PositionReportClassAMessage).Latitude
-                            Me.Tracking(message.Mmsi).Lon = CType(message, PositionReportClassAMessage).Longitude
-                            Me.Log(String.Format("Vessel at {0}° {1}° [known]", Me.Tracking(message.Mmsi).Lat, Me.Tracking(message.Mmsi).Lon))
+                            Dim m As PositionReportClassAMessage = CType(message, PositionReportClassAMessage)
+                            If (Broadcast.Distance(Me.Tracking(message.Mmsi).Coordinates, m.Coordinates) > 1) Then
+                                Me.Tracking(message.Mmsi).History.Push(Me.Tracking(message.Mmsi).Coordinates)
+                            End If
+                            Me.Tracking(message.Mmsi).Lat = m.Latitude
+                            Me.Tracking(message.Mmsi).Lon = m.Longitude
+                            Me.Tracking(message.Mmsi).Last = DateTime.Now
+                            RaiseEvent Update(MessageType.Vessel, Me.Tracking(message.Mmsi), True)
                         Else
-                            Me.Tracking.Add(message.Mmsi, New Message(Me, message))
+                            Me.Tracking.Add(message.Mmsi, New Broadcast(Me, message))
                             Me.Overlay.Markers.Add(Me.Tracking(message.Mmsi).Marker)
-                            Me.Log(String.Format("Vessel at {0}° {1}°", Me.Tracking(message.Mmsi).Lat, Me.Tracking(message.Mmsi).Lon))
+                            Me.Tracking(message.Mmsi).History.Push(Me.Tracking(message.Mmsi).Coordinates)
+                            RaiseEvent Update(MessageType.Vessel, Me.Tracking(message.Mmsi), False)
                         End If
                     Case AisMessageType.BaseStationReport
                         If (Me.Tracking.ContainsKey(message.Mmsi)) Then
-                            Me.Tracking(message.Mmsi).Lat = CType(message, BaseStationReportMessage).Latitude
-                            Me.Tracking(message.Mmsi).Lon = CType(message, BaseStationReportMessage).Longitude
-                            Me.Log(String.Format("Station at {0}° {1}° [known]", Me.Tracking(message.Mmsi).Lat, Me.Tracking(message.Mmsi).Lon))
+                            Dim m As BaseStationReportMessage = CType(message, BaseStationReportMessage)
+                            If (Broadcast.Distance(Me.Tracking(message.Mmsi).Coordinates, m.Coordinates) > 1) Then
+                                Me.Tracking(message.Mmsi).History.Push(Me.Tracking(message.Mmsi).Coordinates)
+                            End If
+                            Me.Tracking(message.Mmsi).Lat = m.Latitude
+                            Me.Tracking(message.Mmsi).Lon = m.Longitude
+                            Me.Tracking(message.Mmsi).Last = DateTime.Now
+                            RaiseEvent Update(MessageType.Station, Me.Tracking(message.Mmsi), True)
                         Else
-                            Me.Tracking.Add(message.Mmsi, New Message(Me, message))
+                            Me.Tracking.Add(message.Mmsi, New Broadcast(Me, message))
                             Me.Overlay.Markers.Add(Me.Tracking(message.Mmsi).Marker)
-                            Me.Log(String.Format("Station at {0}° {1}°", Me.Tracking(message.Mmsi).Lat, Me.Tracking(message.Mmsi).Lon))
+                            Me.Tracking(message.Mmsi).History.Push(Me.Tracking(message.Mmsi).Coordinates)
+                            RaiseEvent Update(MessageType.Station, Me.Tracking(message.Mmsi), False)
                         End If
                 End Select
             End If
+        End Sub
+
+        Public Sub UpdateNodes()
+            SyncLock Me.Tracking
+                For Each entry As KeyValuePair(Of UInt32, Broadcast) In Me.Tracking
+                    entry.Value.Update()
+                Next
+            End SyncLock
         End Sub
 
         Public Sub Log(message As String)
@@ -97,10 +121,22 @@ Namespace Models
             End If
         End Sub
 
-        Public ReadOnly Property Mmsi2Country(mmsi As UInt32) As String
+        Public Sub FetchUpdate()
+            If (Not Me.Running) Then
+                Me.Client.Start()
+            End If
+        End Sub
+
+        Public ReadOnly Property Running As Boolean
+            Get
+                Return Me.Client.Running
+            End Get
+        End Property
+
+        Public ReadOnly Property GetCountry(mmsi As UInt32) As String
             Get
                 If (mmsi > 99) Then
-                    Dim index As String = mmsi.ToString.Substring(0, 3)
+                    Dim index As Integer = mmsi.Uint2int(0, 3)
                     If (Me.Countries.ContainsKey(index)) Then
                         Return Me.Countries(index)
                     End If
